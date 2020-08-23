@@ -51,4 +51,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-??_?
+?a_?
+?b_?
+1c_1/1c_1
+*.txt
+*.ipynb
