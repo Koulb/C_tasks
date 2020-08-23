@@ -44,7 +44,7 @@ int main()
 {   
 
     FILE *text;
-    char txtString[SIZE], words[SIZE][35], *ptString[SIZE], *token;;
+    char txtString[SIZE], *ptString[SIZE], *token;;
     const char breakers[SIZE] = " \t\n,.:;!?-"; 
     int i = 0, endString, sizeString;
 
@@ -55,10 +55,9 @@ int main()
     token = strtok(txtString, breakers);
     
     /* assigning string arrays */
-    while( token != NULL ) {
- 		strcpy(words[i],token);
- 		*words[i]=tolower(*words[i]);
- 		ptString[i] = words[i];
+    while( token != NULL ){
+ 		ptString[i] = token;
+ 		*ptString[i] = tolower(*ptString[i]);
  		i++; 
         token = strtok(NULL, breakers);
     }
