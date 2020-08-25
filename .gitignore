@@ -54,5 +54,6 @@ dkms.conf
 ?a_?
 ?b_?
 1c_1/1c_1
+1c_2
 *.txt
 *.ipynb
