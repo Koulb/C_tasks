@@ -3,23 +3,37 @@
 #include <stdlib.h>
 #include <math.h>
 #define SIZE 100
+#define SIZE_numb 6
+#define PI 3.141593
 
+// delete selected char in n
+void deleteChar(char *str, const char c){
+    int i = 0;
 
+    do{ 
+        if (str[i] == c)
+            str[i] = ' ';
+    } while (str[++i] != '\0');
+}
+
+// struct for stack
 typedef struct stack{
-	float value; 
+	char value[SIZE]; 
   	struct stack *next ;  	
 } Stack;
 
-Stack * initStack(float c){
-	Stack *lst   ;
+// stack initialization
+Stack * initStack(char *c){
+	Stack *lst;
 
 	lst = (Stack*)malloc(sizeof(Stack));
-	lst->value = c;
+    lst->value[0] = '0';
 	lst->next = NULL;
 
 	return lst;
 }
 
+// print stack values
 void printStack(Stack * lst){
 
 	Stack *tempList;
@@ -27,43 +41,39 @@ void printStack(Stack * lst){
   	tempList = lst;
 
   	do {
-    	printf("%f \n", tempList->value); 
+    	printf("%s \n", tempList->value); 
     	tempList = tempList->next; 
   	} while (tempList != NULL); 
 
 }
 
-Stack * addStack( Stack *lst, float data){
-	Stack *temp;
+// print stack size
+int stackSize( Stack * lst){
+    Stack *tempList;
+    int count = 0;
 
-  	temp = (Stack*)malloc(sizeof(Stack));
-  	temp->value = data; 
-  	temp->next = lst;
+    tempList = lst;
 
-  	return(temp);
+    do {
+        count++;
+        tempList = tempList->next; 
+    } while (tempList != NULL); 
+
+    return count;
 }
 
-void pushStack( Stack **lst, float data){
+// add value in stack
+void pushStack( Stack **lst, char *data){
 	Stack *temp;
 
   	temp = (Stack*)malloc(sizeof(Stack));
-  	temp->value = data; 
+  	strcpy(temp->value,data);
   	temp->next = *lst;
   	*lst = temp;
 
 }
 
-
-Stack * deleteStack( Stack *lst){
-	Stack *temp;
-
-  	temp = lst;
-  	lst = lst->next;
-  	free(temp);
-
-  	return(lst);
-}
-
+// delete value in stack
 void popStack( Stack **lst){
 	Stack *temp;
 
@@ -73,7 +83,7 @@ void popStack( Stack **lst){
 
 }
 
-
+// check selected char for digit
 int isNumber(char c){
     switch(c){
         case '1':
@@ -95,128 +105,169 @@ int isNumber(char c){
 
 int main(void) {
     Stack *head, *current;
-    char str[SIZE], tempStr[SIZE] = {};
-    int i = -1,j = 0;
-    float x,y;
+    char str[SIZE], tempStr[SIZE] = "";
+    int i = -1,j = 0,negIndex = 0;
+    double x,y;
     size_t strSize = sizeof tempStr;
 
-    head = initStack((float)j);
+    //initialization of stack `and string
+    head = initStack("0");
     current = head;
+    printf("Enter expression in reverse notation (i.e. \"1 1 + 2.2 sqrt /\"): \n");
+    fgets(str, sizeof(str), stdin);
+    deleteChar(str,'\n');
 
-    //scanf("%s", str);
-    strcpy(str , "3.3  2 sqrt + 2 2 * /") ;
-    strcpy(str , "3.3  2 + sqrt") ;
-    //strcpy(str , "0.0 cos ") ;
-    printf("%s\n", str);
-
-
+    // loop for analyse chars in given string
     while(str[++i] != '\0'){
         // spase case
         if (str[i] == ' ')
             continue; 
-        
+
+        //negative number case
+        if ((str[i] == '-') && (isNumber(str[i+1]))){
+                negIndex = 1;
+                continue;
+        }
         // number case
-        if (isNumber(str[i])){
+        if (isNumber(str[i])){  
             while (isNumber(str[i+j])){
-                tempStr[i+j] = str[i+j];
+                tempStr[j] = str[i+j];
                 j++;
             }
 
-            x = strtof(tempStr, NULL);
-            pushStack(&current,x);
-            i = i + j;
+            if (negIndex ){
+                x = -atof(tempStr);
+                memset(tempStr, '\0', strSize);
+                gcvt(x, SIZE_numb, tempStr);
+                negIndex = 0;
+            }
+
+            pushStack(&current,tempStr);
+            i = i + j - 1 ;
             j = 0;
-            memset(tempStr, ' ', strSize);
+            memset(tempStr, '\0', strSize);
             continue;
         }
 
         // unary operaton case 
+        if (stackSize(current) < 2 ){
+            printf("Syntactic error: check your expression\n");
+            exit(2);
+        }
+
+        x = atof(current->value);
+        popStack(&current);
+
         switch(str[i]){
             case 'c':
-                x = current->value;
                 x = cos(x);
-                popStack(&current);
-                pushStack(&current,x);
+                gcvt(x, SIZE_numb, tempStr);
+                pushStack(&current, tempStr);
+                memset(tempStr, '\0', strSize);
                 i = i + 2;
                 continue;
             case 't':
-                x = current->value;
+                if (x == PI / 2){
+                     printf("Error: tan is not determined for  PI / 2\n");
+                    exit(1);
+                }
+
                 x = tan(x);
-                popStack(&current);
-                pushStack(&current,x);
+                gcvt(x, SIZE_numb, tempStr);
+                pushStack(&current, tempStr);
+                memset(tempStr, '\0', strSize);
                 i = i + 2;
                 continue;
             case 's':
                 if (str[i+1] == 'i'){
-                    x = current->value;
                     x = sin(x);
-                    popStack(&current);
-                    pushStack(&current,x);
+                    gcvt(x, SIZE_numb, tempStr);
+                    pushStack(&current, tempStr);
+                    memset(tempStr, '\0', strSize);
                 }
                 else {
-                    x = current->value;
+                    if (x < 0){
+                        printf("Error: square root is determined for not negative values\n");
+                        exit(1);
+                    }
                     x = sqrt(x);
-                    popStack(&current);
-                    pushStack(&current,x);
-                i = i + 1;
+                    gcvt(x, SIZE_numb, tempStr);
+                    pushStack(&current, tempStr);
+                    memset(tempStr, '\0', strSize);
+                    i++;
                 }
 
                 i = i + 2; 
                 continue;
             case 'l':
+            if (x <= 0){
+                printf("Error: logarithm is determined for positive values\n");
+                exit(1);
+            }
+
             if (str[i+1] == 'n'){
-                x = current->value;
                 x = log(x);
-                popStack(&current);
-                pushStack(&current,x); 
+                gcvt(x, SIZE_numb, tempStr);
+                pushStack(&current, tempStr);
+                memset(tempStr, '\0', strSize);
                 i++;
             }
             else{
-                x = current->value;
                 x = log10(x);
-                popStack(&current);
-                pushStack(&current,x); 
+                gcvt(x, SIZE_numb, tempStr);
+                pushStack(&current, tempStr);
+                memset(tempStr, '\0', strSize);
                 i = i + 4; 
             }
             continue;
         }
 
-        // binary operaton case 
+
+        // binary operaton case
+        if (stackSize(current) < 2 ){
+            printf("Syntactic error: check your expression\n");
+            exit(4);
+        } 
+
+        y = atof(current->value);
+        popStack(&current);
+    
         switch(str[i]){
             case '+':
-            x = current->value;
-            popStack(&current);
-            y = current->value;
-            popStack(&current);
-            pushStack(&current, x + y);
+            gcvt(x+y, SIZE_numb, tempStr);
+            pushStack(&current, tempStr);
+            memset(tempStr, '\0', strSize);
             continue;
             case '-':
-            x = current->value;
-            popStack(&current);
-            y = current->value;
-            popStack(&current);
-            pushStack(&current, y - x);
+            gcvt(y-x, SIZE_numb, tempStr);
+            pushStack(&current, tempStr);
+            memset(tempStr, '\0', strSize);
             continue;
             case '*':
-            x = current->value;
-            popStack(&current);
-            y = current->value;
-            popStack(&current);
-            pushStack(&current, x*y);
+            gcvt(x*y, SIZE_numb, tempStr);
+            pushStack(&current, tempStr);
+            memset(tempStr, '\0', strSize);
             continue;
             case '/':
-            x = current->value;
-            popStack(&current);
-            y = current->value;
-            popStack(&current);
-            pushStack(&current, y/x);
+            if (x == 0){
+                printf("Error: division by zero is not determined\n");
+                exit(1);
+            }
+            gcvt(y/x, SIZE_numb, tempStr);
+            pushStack(&current, tempStr);
+            memset(tempStr, '\0', strSize);
             continue;
         }
 
     }    
 
-    printf("Result is %f\n",current->value );
-    // printStack(current);
+    // Syntactic check
+    if (stackSize(current) > 2){
+        printf("Syntactic error: check your expression\n");
+        exit(6);
+    }
+
+    printf("Result is %s\n",current->value );
 
   return 0;
 }
